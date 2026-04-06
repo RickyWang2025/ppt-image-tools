@@ -1,0 +1,119 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: false
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install -r ppt-image-tools-installer/backend/requirements.txt
+
+    - name: Build EXE with PyInstaller
+      run: |
+        pyinstaller --noconfirm --onefile --name "PPT图片工具" --console `
+          --add-data "ppt-image-tools-installer/backend/app/routers;app/routers" `
+          --add-data "ppt-image-tools-installer/backend/app/services;app/services" `
+          --add-data "ppt-image-tools-installer/backend/app/utils;app/utils" `
+          --add-data "ppt-image-tools-installer/addon;addon" `
+          --hidden-import=uvicorn.logging `
+          --hidden-import=uvicorn.protocols `
+          --hidden-import=uvicorn.protocols.http `
+          --hidden-import=uvicorn.protocols.http.auto `
+          --hidden-import=uvicorn.protocols.websockets `
+          --hidden-import=uvicorn.protocols.websockets.auto `
+          --hidden-import=uvicorn.lifespan `
+          --hidden-import=uvicorn.lifespan.on `
+          --collect-all rembg `
+          --exclude-module tkinter `
+          --exclude-module matplotlib `
+          ppt-image-tools-installer/backend/app/main.py
+      shell: pwsh
+
+    - name: Create release package
+      run: |
+        mkdir release
+        copy dist\PPT图片工具.exe release\
+        xcopy /E /I /Y ppt-image-tools-installer\addon release\addon
+        copy ppt-image-tools-installer\安装.bat release\
+        copy ppt-image-tools-installer\卸载.bat release\
+        copy ppt-image-tools-installer\README.md release\
+      shell: cmd
+
+    - name: Create ZIP archive
+      run: |
+        cd release
+        7z a -tzip ../PPT图片工具.zip *
+      shell: cmd
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: PPT图片工具
+        path: release/
+
+    - name: Get version
+      id: version
+      run: |
+        if ("${{ github.event.inputs.version }}" -ne "") {
+          echo "version=${{ github.event.inputs.version }}" >> $env:GITHUB_OUTPUT
+        } elseif ("${{ github.ref_type }}" -eq "tag") {
+          echo "version=${{ github.ref_name }}" >> $env:GITHUB_OUTPUT
+        } else {
+          echo "version=1.0.0" >> $env:GITHUB_OUTPUT
+        }
+      shell: pwsh
+
+    - name: Create Release
+      if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: PPT图片工具 v${{ steps.version.outputs.version }}
+        body: |
+          ## PPT图片处理工具 v${{ steps.version.outputs.version }}
+
+          ### 功能
+          - 图片高清放大 (2x/4x)
+          - 智能抠图
+          - 水印/物体擦除
+          - 图片矢量化
+
+          ### 安装方法
+          1. 下载 `PPT图片工具.zip`
+          2. 解压后双击 `安装.bat`
+          3. 打开PPT，插入 → 获取加载项 → 管理我的加载项
+          4. 选择 "图片处理工具"
+
+          ### 系统要求
+          - Windows 10/11
+          - PowerPoint 2016+
+
+          **无需安装Python，开箱即用！**
+        files: |
+          PPT图片工具.zip
+          release/PPT图片工具.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
