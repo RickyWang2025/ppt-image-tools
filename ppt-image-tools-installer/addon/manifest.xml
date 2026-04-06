@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:type="TaskPaneApp">
+
+  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <Version>1.0.0</Version>
+  <ProviderName>PPT Image Tools</ProviderName>
+  <DefaultLocale>zh-CN</DefaultLocale>
+  <DisplayName DefaultValue="图片处理工具"/>
+  <Description DefaultValue="AI驱动的PPT图片处理插件：放大、抠图、擦除、矢量化"/>
+
+  <Hosts>
+    <Host Name="Presentation"/>
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="http://localhost:8000/static/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+</OfficeApp>

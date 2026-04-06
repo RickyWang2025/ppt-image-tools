@@ -1,0 +1,24 @@
+# 核心依赖
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+python-multipart>=0.0.6
+Pillow>=10.0.0
+numpy>=1.24.0
+httpx>=0.24.0
+
+# 图片处理
+rembg>=2.0.50                    # 抠图
+realesrgan>=0.3.0                # 放大
+iopaint>=1.0.0                   # 擦除修复
+vtracer>=0.6.0                   # 矢量化
+
+# 推理引擎
+onnxruntime>=1.15.0              # CPU推理
+# onnxruntime-gpu>=1.15.0        # GPU推理（可选）
+torch>=2.0.0                     # PyTorch
+torchvision>=0.15.0
+
+# 工具
+python-dotenv>=1.0.0
+loguru>=0.7.0
+aiofiles>=23.0.0

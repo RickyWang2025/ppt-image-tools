@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图片处理工具</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      font-size: 14px;
+      color: #333;
+      background: #f5f5f5;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .header {
+      text-align: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+      margin-bottom: 16px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      color: #0078d4;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 80px;
+      padding: 8px 12px;
+      border: 1px solid #0078d4;
+      background: white;
+      color: #0078d4;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      background: #e6f2ff;
+    }
+
+    .tab.active {
+      background: #0078d4;
+      color: white;
+    }
+
+    .panel {
+      display: none;
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel h2 {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-primary {
+      background: #0078d4;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #106ebe;
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .status.info {
+      background: #e6f2ff;
+      color: #0078d4;
+    }
+
+    .status.success {
+      background: #e6ffe6;
+      color: #107c10;
+    }
+
+    .status.error {
+      background: #ffe6e6;
+      color: #d83b01;
+    }
+
+    .preview {
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .preview img {
+      max-width: 100%;
+      max-height: 150px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-group input {
+      width: auto;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 16px 0;
+    }
+
+    .help-text {
+      font-size: 11px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e0e0e0;
+      border-top-color: #0078d4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🖼️ 图片处理工具</h1>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="upscale">放大</div>
+      <div class="tab" data-tab="removebg">抠图</div>
+      <div class="tab" data-tab="inpaint">擦除</div>
+      <div class="tab" data-tab="vectorize">矢量</div>
+    </div>
+
+    <!-- 放大面板 -->
+    <div class="panel active" id="panel-upscale">
+      <h2>图片高清放大</h2>
+      <div class="form-group">
+        <label>放大倍数</label>
+        <select id="upscale-scale">
+          <option value="2">2倍</option>
+          <option value="4">4倍</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>模型类型</label>
+        <select id="upscale-model">
+          <option value="general">通用模型</option>
+          <option value="anime">动漫模型</option>
+        </select>
+      </div>
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="upscale-face">
+        <label for="upscale-face">人脸增强（人像推荐）</label>
+      </div>
+      <button class="btn btn-primary" onclick="processUpscale()">处理选中图片</button>
+      <div id="upscale-status" class="status" style="display:none"></div>
+    </div>
+
+    <!-- 抠图面板 -->
+    <div class="panel" id="panel-removebg">
+      <h2>智能抠图</h2>
+      <div class="form-group">
+        <label>抠图模型</label>
+        <select id="removebg-model">
+          <option value="u2net">通用（推荐）</option>
+          <option value="u2netp">快速模式</option>
+          <option value="u2net_human_seg">人像专用</option>
+          <option value="isnet-general-use">高质量</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>替换背景颜色（可选）</label>
+        <select id="removebg-bgcolor">
+          <option value="">透明背景</option>
+          <option value="255,255,255">白色</option>
+          <option value="0,0,0">黑色</option>
+          <option value="240,240,240">浅灰</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="processRemoveBg()">处理选中图片</button>
+      <div id="removebg-status" class="status" style="display:none"></div>
+    </div>
+
+    <!-- 擦除面板 -->
+    <div class="panel" id="panel-inpaint">
+      <h2>水印/物体擦除</h2>
+      <div class="status info">
+        提示：此功能需要绘制遮罩。<br>
+        1. 先插入一张图片<br>
+        2. 用画笔工具标记要擦除的区域<br>
+        3. 点击处理按钮
+      </div>
+      <div class="form-group">
+        <label>修复模型</label>
+        <select id="inpaint-model">
+          <option value="lama">LaMa（推荐）</option>
+          <option value="mat">MAT（高质量）</option>
+          <option value="cv2">OpenCV（快速）</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="processInpaint()">处理图片</button>
+      <div id="inpaint-status" class="status" style="display:none"></div>
+    </div>
+
+    <!-- 矢量化面板 -->
+    <div class="panel" id="panel-vectorize">
+      <h2>图片矢量化</h2>
+      <div class="form-group">
+        <label>预设配置</label>
+        <select id="vectorize-preset">
+          <option value="">自定义</option>
+          <option value="color">彩色（照片）</option>
+          <option value="bw">黑白（文字/线条）</option>
+          <option value="posterized">海报风格</option>
+          <option value="detailed">细节优先</option>
+          <option value="simple">简洁风格</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>颜色模式</label>
+        <select id="vectorize-color">
+          <option value="color">彩色</option>
+          <option value="bw">黑白</option>
+        </select>
+      </div>
+      <p class="help-text">矢量化后的SVG将作为新幻灯片插入</p>
+      <button class="btn btn-primary" onclick="processVectorize()">处理选中图片</button>
+      <div id="vectorize-status" class="status" style="display:none"></div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>处理中，请稍候...</p>
+    </div>
+  </div>
+
+  <script src="taskpane.js"></script>
+</body>
+</html>
