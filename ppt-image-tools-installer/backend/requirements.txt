@@ -1,24 +1,19 @@
-# 核心依赖
-fastapi>=0.100.0
-uvicorn[standard]>=0.22.0
-python-multipart>=0.0.6
-Pillow>=10.0.0
-numpy>=1.24.0
-httpx>=0.24.0
+  # 核心依赖（轻量版，用于打包）
+  fastapi>=0.100.0
+  uvicorn[standard]>=0.22.0
+  python-multipart>=0.0.6
+  Pillow>=10.0.0
+  numpy>=1.24.0
+  httpx>=0.24.0
 
-# 图片处理
-rembg>=2.0.50                    # 抠图
-realesrgan>=0.3.0                # 放大
-iopaint>=1.0.0                   # 擦除修复
-vtracer>=0.6.0                   # 矢量化
+  # 图片处理（轻量版 - 只包含抠图功能）
+  rembg>=2.0.50                    # 抠图（使用onnxruntime，无需torch）
+  onnxruntime>=1.15.0              # CPU推理
 
-# 推理引擎
-onnxruntime>=1.15.0              # CPU推理
-# onnxruntime-gpu>=1.15.0        # GPU推理（可选）
-torch>=2.0.0                     # PyTorch
-torchvision>=0.15.0
+  # 工具
+  python-dotenv>=1.0.0
+  loguru>=0.7.0
+  aiofiles>=23.0.0
 
-# 工具
-python-dotenv>=1.0.0
-loguru>=0.7.0
-aiofiles>=23.0.0
+  # 注意：图片放大(realesrgan)、擦除(iopaint)、矢量化(vtracer)
+  # 这些功能依赖大型模型(torch等)，将在首次使用时提示用户下载
